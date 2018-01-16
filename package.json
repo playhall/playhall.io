@@ -1,0 +1,40 @@
+{
+  "name": "playhall-ico",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "bin/compile && bin/test",
+    "compile": "bin/compile"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/frostiq/playhall-ico.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/frostiq/playhall-ico/issues"
+  },
+  "homepage": "https://gitlab.com/frostiq/playhall-ico#README",
+  "dependencies": {
+    "bignumber.js": "^4.0.2",
+    "chai": "^4.1.0",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.1",
+    "zeppelin-solidity": "^1.5.0",
+    "@types/node": "^8.0.56",
+    "@types/chai": "^4.0.4",
+    "@types/chai-as-promised": "^0.0.31",
+    "@types/mocha": "^2.2.46",
+    "web3": "^1.0.0-beta.27",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.5.2",
+    "ethereumjs-testrpc": "^6.0.3",
+    "truffle": "^4.0.4",
+    "soltsice": "^0.9.10"
+  }
+}
