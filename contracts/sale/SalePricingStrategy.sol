@@ -32,14 +32,14 @@ contract SalePricingStrategy is IPricingStrategy {
             return 0;
         }
 
-        var (rate, index1) = currentRate(tokensSold);
+        var (rate, index) = currentRate(tokensSold);
         tokenAmount = weiAmount.mul(rate);
 
-        var index2 = currentIndex(tokensSold.add(tokenAmount));
-        if (index1 != index2) {
-            uint currentSlotTokens = limits[index1].sub(tokensSold);
-            uint remainingWei = weiAmount.sub(currentSlotTokens.div(rates[index1]));
-            tokenAmount = currentSlotTokens.add(calculateTokenAmount(remainingWei, limits[index1]));
+        // if we crossed slot border, recalculate remaining tokens according to next slot price
+        if (tokensSold.add(tokenAmount) > limits[index]) {
+            uint currentSlotTokens = limits[index].sub(tokensSold);
+            uint remainingWei = weiAmount.sub(currentSlotTokens.div(rates[index]));
+            tokenAmount = currentSlotTokens.add(calculateTokenAmount(remainingWei, limits[index]));
         }
     }
 
@@ -51,12 +51,4 @@ contract SalePricingStrategy is IPricingStrategy {
             rate = rates[++index];
         }
     }
-
-    function currentIndex(uint tokensSold) public view returns (uint8 index) {
-        index = 0;
-        while (index < limits.length && tokensSold >= limits[index]) {
-            ++index;
-        }
-    }
-
 }

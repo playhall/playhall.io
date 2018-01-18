@@ -112,15 +112,4 @@ contract('SalePricingStrategy', (accounts) => {
             resIndex.toNumber().should.equal(expectedIndex[i], `index=${i}`)
         }
     })
-
-    it("#11 should calculate currentIndex correctly", async () => {
-        const tokensSold =     [0, 30, LIMITS[0], LIMITS[1]-1]
-        const expectedIndex =  [0, 0, 1, 1]
-
-        for (let i = 0; i < tokensSold.length; i++) {
-            const resIndex = await strategy.currentIndex(tokensSold[i])
-            resIndex.toNumber().should.equal(expectedIndex[i], `index=${i}`)
-        }
-    })
-
 });

@@ -35,6 +35,6 @@
     "typescript": "^2.5.2",
     "ethereumjs-testrpc": "^6.0.3",
     "truffle": "^4.0.4",
-    "soltsice": "^0.9.10"
+    "soltsice": "^0.9.11"
   }
 }
