@@ -3,15 +3,19 @@ import { BigNumber } from 'bignumber.js'
 import * as chai from 'chai'
 import { PlayHallToken } from '../types'
 import { W3 } from 'soltsice';
+import { Utils } from './Utils'
 
 chai.should();
 W3.Default = new W3();
 
 contract('PlayHallToken', (accounts) => {
 
-    it("should have correct parameters", async () => {
+    const OWNER = accounts[0];
+    let token: PlayHallToken;
 
-        const token = await PlayHallToken.New({
+    it("#1 should have correct parameters", async () => {
+
+        token = await PlayHallToken.New({
             from : accounts[0],
             gas: 10000000,
             gasPrice: 10000000000,
@@ -27,4 +31,24 @@ contract('PlayHallToken', (accounts) => {
         decimals.toNumber().should.equal(18)
     })
 
+    it("#2 should not allow mint tokens from non-owner account", async () => {
+        await token.mint(accounts[4], 100, Utils.txParams(accounts[1]))
+            .should.be.rejected
+    })
+
+    it("#3 should allow mint tokens from owner account", async () => {
+        let tokensAmount = 100;
+        await token.mint(accounts[4], tokensAmount, Utils.txParams(OWNER))
+        let balance = await token.balanceOf(accounts[4]);
+        balance.toNumber().should.be.equal(tokensAmount);
+    })
+
+    it("#4 should not allow mint tokens after finish minting", async () => {
+        let tokensAmount = 100;
+        await token.finishMinting(Utils.txParams(OWNER))
+        await token.mint(accounts[4], tokensAmount, Utils.txParams(OWNER))
+            .should.be.rejected
+    })
+
+    
 });
