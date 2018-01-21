@@ -25,6 +25,7 @@ contract('FinalizeAgent', (accounts) => {
     const OWNER = accounts[0];
     const WALLET = accounts[1];
     const INVESTORS = [accounts[2], accounts[3]]; 
+    const ADMIN = accounts[5];
 
     const deployingParams = {
         from : accounts[0],
@@ -50,49 +51,18 @@ contract('FinalizeAgent', (accounts) => {
     let token: PlayHallToken;
     let pricingStrategy: SalePricingStrategy;
     let finalizeAgent: FinalizeAgent;
-
-    let deploySale = async (deltaStart, duration) => {
-        const now = await Utils.getLastBlockTime();
-        const startTime = now + deltaStart;
-        const phToken = await PlayHallToken.New(deployingParams);
-        const strategy = await SalePricingStrategy.New(deployingParams, {
-            _rates: RATES,
-            _limits: LIMITS
-        });
-        const phSale = await Sale.New(deployingParams, {
-            _startTime: startTime,
-            _endTime: startTime + duration,
-            _pricingStrategy: strategy.address,
-            _token: phToken.address,
-            _wallet: WALLET,
-            _weiMaximumGoal: WEI_MAX_GOAL,
-            _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT
-        });
-        const agent = await FinalizeAgent.New(deployingParams, {
-            _token: phToken.address,
-            _crowdsale: phSale.address,
-            _teamPercent: TEAM_PERCENT,
-            _bountyPercent: BOUNTY_PERCENT,
-            _reservePercent: RESERVE_PERCENT,
-            _teamFund: TEAM_FUND,
-            _bountyFund: BOUNTY_FUND,
-            _reserveFund: RESERVE_FUND
-        });
-        await phSale.setFinalizeAgent(agent.address, Utils.txParams(OWNER));
-        return phSale;
-    }
+    let START_TIME: number;
 
     before(async () => {
-        const START_TIME = await Utils.getLastBlockTime() + 1*DAY;
-        const END_TIME = START_TIME + 10*DAY;
-                
         token = await PlayHallToken.New(deployingParams);
 
         pricingStrategy = await SalePricingStrategy.New(deployingParams, {
             _rates: RATES,
             _limits: LIMITS
         });
+
+        START_TIME = await Utils.getLastBlockTime() + 20*DAY;
+        const END_TIME = START_TIME + 10*DAY;
 
         sale = await Sale.New(deployingParams, {
             _startTime: START_TIME,
@@ -102,7 +72,8 @@ contract('FinalizeAgent', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT
+            _fundsPercent: FUNDS_PERCENT,
+            _admin: ADMIN
         });
 
         finalizeAgent = await FinalizeAgent.New(deployingParams, {
@@ -159,7 +130,8 @@ contract('FinalizeAgent', (accounts) => {
     });
 
     it("#6 should successfully finalize crowdsale", async () => {
-        await Utils.increaseTime(1*DAY);
+        const now = await Utils.getLastBlockTime();
+        await Utils.increaseTime(START_TIME - now + DAY, OWNER);
         const weiValue = 1000;
         const tokensValue = await pricingStrategy.calculateTokenAmount(weiValue, 0, Utils.txParams(OWNER));
         const value = Math.round(tokensValue.toNumber() / 60) * FUNDS_PERCENT;

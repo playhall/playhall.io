@@ -14,13 +14,7 @@ contract('PlayHallToken', (accounts) => {
     let token: PlayHallToken;
 
     it("#1 should have correct parameters", async () => {
-
-        token = await PlayHallToken.New({
-            from : accounts[0],
-            gas: 10000000,
-            gasPrice: 10000000000,
-            value: 0
-        });
+        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(accounts[0]));
         
         const symbol = await token.symbol()
         const name = await token.name()

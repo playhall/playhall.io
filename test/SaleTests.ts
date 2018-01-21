@@ -25,6 +25,7 @@ contract('Sale', (accounts) => {
     const OWNER = accounts[0];
     const WALLET = accounts[1];
     const INVESTORS = [accounts[2], accounts[3]]; 
+    const ADMIN = accounts[5];
 
     const deployingParams = {
         from : accounts[0],
@@ -45,48 +46,16 @@ contract('Sale', (accounts) => {
     const BOUNTY_PERCENT = 15;
     const RESERVE_PERCENT = 50;
 
-    let START_TIME, END_TIME: number;
+    let START_TIME: number;
+    let END_TIME: number;
 
     let sale: Sale;
     let token: PlayHallToken;
     let pricingStrategy: SalePricingStrategy;
     let finalizeAgent: FinalizeAgent;
 
-    let deploySale = async (deltaStart, duration) => {
-        const now = await Utils.getLastBlockTime();
-        const startTime = now + deltaStart;
-        const phToken = await PlayHallToken.New(deployingParams);
-        const strategy = await SalePricingStrategy.New(deployingParams, {
-            _rates: RATES,
-            _limits: LIMITS
-        });
-        const phSale = await Sale.New(deployingParams, {
-            _startTime: startTime,
-            _endTime: startTime + duration,
-            _pricingStrategy: strategy.address,
-            _token: phToken.address,
-            _wallet: WALLET,
-            _weiMaximumGoal: WEI_MAX_GOAL,
-            _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT
-        });
-        const agent = await FinalizeAgent.New(deployingParams, {
-            _token: phToken.address,
-            _crowdsale: phSale.address,
-            _teamPercent: TEAM_PERCENT,
-            _bountyPercent: BOUNTY_PERCENT,
-            _reservePercent: RESERVE_PERCENT,
-            _teamFund: TEAM_FUND,
-            _bountyFund: BOUNTY_FUND,
-            _reserveFund: RESERVE_FUND
-        });
-        await phSale.setFinalizeAgent(agent.address, Utils.txParams(OWNER));
-        return phSale;
-    }
-
     before(async()=>{
-        START_TIME = await Utils.getLastBlockTime() + 30*DAY;
-        END_TIME = START_TIME + 10*DAY;
+        
                 
         token = await PlayHallToken.New(deployingParams);
 
@@ -95,6 +64,8 @@ contract('Sale', (accounts) => {
             _limits: LIMITS
         });
 
+        START_TIME = await Utils.getLastBlockTime() + 30*DAY;
+        END_TIME = START_TIME + 10*DAY;
         sale = await Sale.New(deployingParams, {
             _startTime: START_TIME,
             _endTime: END_TIME,
@@ -103,7 +74,8 @@ contract('Sale', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT
+            _fundsPercent: FUNDS_PERCENT,
+            _admin: ADMIN
         });
 
         finalizeAgent = await FinalizeAgent.New(deployingParams, {
@@ -133,7 +105,7 @@ contract('Sale', (accounts) => {
 
     it("#2 should stop token minting after finalize crowdsale", async() => {
         let now = await Utils.getLastBlockTime();
-        Utils.increaseTime(START_TIME - now + 30);
+        await Utils.increaseTime(START_TIME - now + 30, OWNER);
         await sale.sendTransaction(Utils.txParams(accounts[2], 200));
         await sale.finalize(Utils.txParams(OWNER));
         await sale.sendTransaction(Utils.txParams(accounts[2], 200)).should.be.rejected;

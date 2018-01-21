@@ -1,14 +1,17 @@
 pragma solidity ^0.4.17;
 
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "zeppelin-solidity/contracts/token/SafeERC20.sol";
 import "./IFinalizeAgent.sol";
 import "../PlayHallToken.sol";
 import "../SaleBase.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 contract FinalizeAgent is IFinalizeAgent {
     using SafeMath for uint;
+    using SafeERC20 for ERC20Basic;
     
-    PlayHallToken public token;
+    ERC20Basic public token;
     SaleBase public crowdsale;
 
     uint public teamPercent;
@@ -20,7 +23,7 @@ contract FinalizeAgent is IFinalizeAgent {
     address public reserveFund;
     
     function FinalizeAgent (
-        PlayHallToken _token, 
+        ERC20Basic _token, 
         SaleBase _crowdsale,
         uint _teamPercent,
         uint _bountyPercent,
@@ -28,7 +31,7 @@ contract FinalizeAgent is IFinalizeAgent {
         address _teamFund,
         address _bountyFund,
         address _reserveFund
-    ) 
+    ) public
     {
         require(address(_token) != 0);
         require(address(_crowdsale) != 0);
@@ -58,8 +61,8 @@ contract FinalizeAgent is IFinalizeAgent {
         uint tokensForBounty = tokensPercent.mul(bountyPercent);
         uint tokensForReserve = tokensForFunds - (tokensForTeam + tokensForBounty);
 
-        token.transfer(teamFund, tokensForTeam);
-        token.transfer(bountyFund, tokensForBounty);
-        token.transfer(reserveFund, tokensForReserve);
+        token.safeTransfer(teamFund, tokensForTeam);
+        token.safeTransfer(bountyFund, tokensForBounty);
+        token.safeTransfer(reserveFund, tokensForReserve);
     }
 }

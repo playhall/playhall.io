@@ -3,6 +3,7 @@ pragma solidity ^0.4.17;
 import "zeppelin-solidity/contracts/token/TokenVesting.sol";
 import "./FundBase.sol";
 
+
 contract VestedFund is FundBase {
 
     function VestedFund(ERC20Basic _token) public FundBase(_token) {

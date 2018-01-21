@@ -6,6 +6,7 @@ import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "zeppelin-solidity/contracts/ownership/Contactable.sol";
 import "./IPricingStrategy.sol";
 
+
 contract SaleBase is Pausable, Contactable {
     using SafeMath for uint;
   
@@ -46,6 +47,8 @@ contract SaleBase is Pausable, Contactable {
     //How much ETH each address has invested to this crowdsale
     mapping (address => uint) public investedAmountOf;
 
+    address public admin;
+
     /**
      * event for token purchase logging
      * @param purchaser who paid for the tokens
@@ -70,8 +73,9 @@ contract SaleBase is Pausable, Contactable {
         MintableToken _token,
         address _wallet,
         uint _weiMaximumGoal,
-        uint _weiMinimumGoal
-    )  
+        uint _weiMinimumGoal,
+        address _admin
+    ) public
     {
         require(_startTime >= now);
         require(_endTime >= _startTime);
@@ -79,6 +83,7 @@ contract SaleBase is Pausable, Contactable {
         require(address(_token) != 0x0);
         require(_wallet != 0x0);
         require(_weiMaximumGoal > 0);
+        require(address(_admin) != 0);
 
         startTime = _startTime;
         endTime = _endTime;
@@ -87,7 +92,14 @@ contract SaleBase is Pausable, Contactable {
         wallet = _wallet;
         weiMaximumGoal = _weiMaximumGoal;
         weiMinimumGoal = _weiMinimumGoal;
-}
+        admin = _admin;
+    }
+
+
+    modifier onlyOwnerOrAdmin() {
+        require(msg.sender == owner || msg.sender == admin); 
+        _;
+    }
 
     // fallback function can be used to buy tokens
     function () external payable {
@@ -97,13 +109,21 @@ contract SaleBase is Pausable, Contactable {
     // low level token purchase function
     function buyTokens(address beneficiary) public whenNotPaused payable returns (bool) {
         require(beneficiary != 0x0);
-        require(validPurchase());
+        require(validPurchase(msg.value));
     
         uint weiAmount = msg.value;
     
         // calculate token amount to be created
         uint tokenAmount = pricingStrategy.calculateTokenAmount(weiAmount, tokensSold);
-    
+        
+        mintTokenToInvestor(beneficiary, tokenAmount, weiAmount);
+        
+        wallet.transfer(msg.value);
+
+        return true;
+    }
+
+    function mintTokenToInvestor(address beneficiary, uint tokenAmount, uint weiAmount) internal {
         // update state
         if (investedAmountOf[beneficiary] == 0) {
             // A new investor
@@ -115,17 +135,13 @@ contract SaleBase is Pausable, Contactable {
     
         token.mint(beneficiary, tokenAmount);
         TokenPurchase(msg.sender, beneficiary, weiAmount, tokenAmount);
-
-        wallet.transfer(msg.value);
-
-        return true;
     }
 
     // return true if the transaction can buy tokens
-    function validPurchase() internal constant returns (bool) {
+    function validPurchase(uint weiAmount) internal constant returns (bool) {
         bool withinPeriod = (now >= startTime) && now <= endTime;
-        bool nonZeroPurchase = msg.value != 0;
-        bool withinCap = weiRaised.add(msg.value) <= weiMaximumGoal;
+        bool nonZeroPurchase = weiAmount != 0;
+        bool withinCap = weiRaised.add(weiAmount) <= weiMaximumGoal;
 
         return withinPeriod && nonZeroPurchase && withinCap;
     }
@@ -181,5 +197,23 @@ contract SaleBase is Pausable, Contactable {
         weiRefunded = weiRefunded.add(weiValue);
         Refund(msg.sender, weiValue);
         msg.sender.transfer(weiValue);
+    }
+
+    function registerPayment(address beneficiary, uint tokenAmount, uint weiAmount) public onlyOwnerOrAdmin {
+        require(validPurchase(weiAmount));
+        mintTokenToInvestor(beneficiary, tokenAmount, weiAmount);
+    }
+
+    function registerPayments(address[] beneficiaries, uint[] tokenAmounts, uint[] weiAmounts) external onlyOwnerOrAdmin {
+        require(beneficiaries.length == tokenAmounts.length);
+        require(tokenAmounts.length == weiAmounts.length);
+
+        for (uint i = 0; i < beneficiaries.length; i++) {
+            registerPayment(beneficiaries[i], tokenAmounts[i], weiAmounts[i]);
+        }
+    }
+
+    function setAdmin(address adminAddress) external onlyOwner {
+        admin = adminAddress;
     }
 }

@@ -36,8 +36,9 @@ contract Sale is SaleBase {
         address _wallet,
         uint _weiMaximumGoal,
         uint _weiMinimumGoal,
-        uint _fundsPercent
-    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal) 
+        uint _fundsPercent,
+        address _admin
+    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal, _admin) 
     {
         fundsPercent = _fundsPercent;
     }

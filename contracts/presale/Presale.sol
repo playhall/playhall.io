@@ -21,8 +21,9 @@ contract Presale is SaleBase {
         MintableToken _token,
         address _wallet,
         uint _weiMaximumGoal,
-        uint _weiMinimumGoal
-    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal) 
+        uint _weiMinimumGoal,
+        address _admin
+    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal, _admin) 
     {
 
     }

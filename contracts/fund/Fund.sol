@@ -2,6 +2,7 @@ pragma solidity ^0.4.17;
 
 import "./FundBase.sol";
 
+
 contract Fund is FundBase {
 
     function Fund(ERC20Basic _token) public FundBase(_token) {
