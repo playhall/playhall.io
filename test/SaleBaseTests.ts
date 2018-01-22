@@ -58,15 +58,15 @@ contract('SaleBase', (accounts) => {
         return saleBase;
     }
 
-    before(async()=>{
-        START_TIME = await Utils.getLastBlockTime() + 40*DAY;
-        END_TIME = START_TIME + 10*DAY;
-                
+    before(async()=>{        
         token = await PlayHallToken.New(deployingParams);
 
         pricingStrategy = await PresalePricingStrategy.New(deployingParams, {
             _rate: RATE
         });
+
+        START_TIME = (await Utils.getLastBlockTime()) + 40*DAY;
+        END_TIME = START_TIME + 10*DAY;
 
         saleBase = await SaleBase.New(deployingParams, {
             _startTime: START_TIME,
