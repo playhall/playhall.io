@@ -99,12 +99,12 @@ contract('SaleBase', (accounts) => {
         res.should.equal(OWNER);
     });
 
-    it('#3 should not allow to invest before start', async () => {
+    it('#3 should not allow to buy before start', async () => {
         return saleBase.sendTransaction(Utils.txParams(INVESTORS[0], 1))
             .should.be.rejected;
     });
 
-    it('#4 should allow all investors to invest after start', async () => {
+    it('#4 should allow all buyers to buy after start', async () => {
         const now = await Utils.getLastBlockTime();
         const startTime = (await saleBase.startTime()).toNumber();
         await Utils.increaseTime(startTime - now + 30, accounts[0]);
@@ -121,14 +121,14 @@ contract('SaleBase', (accounts) => {
         balance2.toNumber().should.equal(balance1.plus(value).toNumber());
     });
 
-    it('#5 should not allow to invest more then hard cap', async () => {
+    it('#5 should not allow to buy more then hard cap', async () => {
         const weiCap = await saleBase.weiMaximumGoal();
         const weiRaised = await saleBase.weiRaised();
         await saleBase.sendTransaction(Utils.txParams(accounts[2], weiCap.minus(weiRaised)));
         return saleBase.sendTransaction(Utils.txParams(accounts[2], 1)).should.be.rejected;
     });
 
-    it('#6 should now allow to invest after endTime', async () => {
+    it('#6 should now allow to buy after endTime', async () => {
         saleBase = await deploySaleBase(10,11);
         const now = await Utils.getLastBlockTime();
         const endTime = (await saleBase.endTime()).toNumber();
@@ -168,12 +168,12 @@ contract('SaleBase', (accounts) => {
         let tokenAmount = 200;
         let weiAmount = 100;
         await saleBase.registerPayment(beneficiary, tokenAmount, weiAmount, Utils.txParams(admin));
-        let investorsCount = (await saleBase.investorCount()).toNumber();
-        let investorTokenBalance = await token.balanceOf(beneficiary);
+        let buyersCount = (await saleBase.buyerCount()).toNumber();
+        let buyerTokenBalance = await token.balanceOf(beneficiary);
         let weiRaised = await saleBase.weiRaised();
 
-        investorsCount.should.be.equal(1);
-        investorTokenBalance.toNumber().should.be.equal(tokenAmount);
+        buyersCount.should.be.equal(1);
+        buyerTokenBalance.toNumber().should.be.equal(tokenAmount);
         weiRaised.toNumber().should.be.equal(weiAmount);
     });
 
@@ -195,12 +195,12 @@ contract('SaleBase', (accounts) => {
         let tokenAmount = 200;
         let weiAmount = 100;
         await saleBase.registerPayment(beneficiary, tokenAmount, weiAmount, Utils.txParams(OWNER));
-        let investorsCount = (await saleBase.investorCount()).toNumber();
-        let investorTokenBalance = await token.balanceOf(beneficiary);
+        let buyersCount = (await saleBase.buyerCount()).toNumber();
+        let buyerTokenBalance = await token.balanceOf(beneficiary);
         let weiRaised = await saleBase.weiRaised();
 
-        investorsCount.should.be.equal(1);
-        investorTokenBalance.toNumber().should.be.equal(2*tokenAmount);
+        buyersCount.should.be.equal(1);
+        buyerTokenBalance.toNumber().should.be.equal(2*tokenAmount);
         weiRaised.toNumber().should.be.equal(2*weiAmount);
     });
 
@@ -247,8 +247,8 @@ contract('SaleBase', (accounts) => {
         ).should.be.fulfilled;
     });
 
-    it("#16 should have correct investors amount of tokens & wei", async()=>{
-        let investors = [accounts[5], accounts[6]];
+    it("#16 should have correct buyers amount of tokens & wei", async()=>{
+        let buyers = [accounts[5], accounts[6]];
         let tokenAmounts = [400, 200];
         let weiAmounts = [200, 100];
         let expectedWeiRaised = weiAmounts[0] + weiAmounts[1] + 200;
@@ -261,8 +261,8 @@ contract('SaleBase', (accounts) => {
         let actualWeiRaised = await saleBase.weiRaised();
         let actualTokenSold = await saleBase.tokensSold();
         let actualInvestorsBalances = [
-            await token.balanceOf(investors[0]),
-            await token.balanceOf(investors[1]),
+            await token.balanceOf(buyers[0]),
+            await token.balanceOf(buyers[1]),
         ];
         actualWeiRaised.toNumber().should.be.equal(expectedWeiRaised);
         actualTokenSold.toNumber().should.be.equal(expectedTokensSold);

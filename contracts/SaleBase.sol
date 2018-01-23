@@ -13,7 +13,7 @@ contract SaleBase is Pausable, Contactable {
     // The token being sold
     MintableToken public token;
   
-    // start and end timestamps where investments are allowed (both inclusive)
+    // start and end timestamps where purchases are allowed (both inclusive)
     uint public startTime;
     uint public endTime;
   
@@ -29,23 +29,23 @@ contract SaleBase is Pausable, Contactable {
     // amount of tokens that was sold on the crowdsale
     uint public tokensSold;
 
-    // maximum amount of wei in total, that can be invested
+    // maximum amount of wei in total, that can be bought
     uint public weiMaximumGoal;
 
-    // if weiMinimumGoal will not be reached till endTime, investors will be able to refund ETH
+    // if weiMinimumGoal will not be reached till endTime, buyers will be able to refund ETH
     uint public weiMinimumGoal;
 
-    // How many distinct addresses have invested
-    uint public investorCount;
+    // How many distinct addresses have bought
+    uint public buyerCount;
 
     // how much wei we have returned back to the contract after a failed crowdfund
     uint public loadedRefund;
 
-    // how much wei we have given back to investors
+    // how much wei we have given back to buyers
     uint public weiRefunded;
 
-    //How much ETH each address has invested to this crowdsale
-    mapping (address => uint) public investedAmountOf;
+    //How much ETH each address has bought to this crowdsale
+    mapping (address => uint) public boughtAmountOf;
 
     address public admin;
 
@@ -63,8 +63,8 @@ contract SaleBase is Pausable, Contactable {
         uint tokenAmount
     );
 
-    // a refund was processed for an investor
-    event Refund(address investor, uint weiAmount);
+    // a refund was processed for an buyer
+    event Refund(address buyer, uint weiAmount);
 
     function SaleBase(
         uint _startTime,
@@ -125,11 +125,11 @@ contract SaleBase is Pausable, Contactable {
 
     function mintTokenToInvestor(address beneficiary, uint tokenAmount, uint weiAmount) internal {
         // update state
-        if (investedAmountOf[beneficiary] == 0) {
-            // A new investor
-            investorCount++;
+        if (boughtAmountOf[beneficiary] == 0) {
+            // A new buyer
+            buyerCount++;
         }
-        investedAmountOf[beneficiary] = investedAmountOf[beneficiary].add(weiAmount);
+        boughtAmountOf[beneficiary] = boughtAmountOf[beneficiary].add(weiAmount);
         weiRaised = weiRaised.add(weiAmount);
         tokensSold = tokensSold.add(tokenAmount);
     
@@ -190,10 +190,10 @@ contract SaleBase is Pausable, Contactable {
     */
     function refund() external {
         require(!isMinimumGoalReached() && loadedRefund > 0);
-        uint256 weiValue = investedAmountOf[msg.sender];
+        uint256 weiValue = boughtAmountOf[msg.sender];
         require(weiValue > 0);
         
-        investedAmountOf[msg.sender] = 0;
+        boughtAmountOf[msg.sender] = 0;
         weiRefunded = weiRefunded.add(weiValue);
         Refund(msg.sender, weiValue);
         msg.sender.transfer(weiValue);

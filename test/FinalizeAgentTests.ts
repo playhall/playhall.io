@@ -151,7 +151,7 @@ contract('FinalizeAgent', (accounts) => {
         reserveFundBalance.toNumber().should.be.equal(expectedReserveFundBalance);
     });
 
-    it("should not allow invest after crowdsale is finalized", async () => {
+    it("should not allow buy after crowdsale is finalized", async () => {
         await sale.sendTransaction(Utils.txParams(accounts[3], 200)).should.be.rejected;
     });
 });

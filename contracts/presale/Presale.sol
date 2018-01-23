@@ -8,7 +8,7 @@ import "../IPricingStrategy.sol";
 /**
  * @title Presale
  * @dev Presale is a contract for managing a token crowdsale.
- * Presales have a start and end timestamps, where investors can make
+ * Presales have a start and end timestamps, where buyers can make
  * token purchases and the crowdsale will assign them tokens based
  * on a token per ETH rate. Funds collected are forwarded to a wallet
  * as they arrive.
