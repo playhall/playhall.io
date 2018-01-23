@@ -3,7 +3,6 @@ pragma solidity ^0.4.17;
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/token/SafeERC20.sol";
 import "./IFinalizeAgent.sol";
-import "../PlayHallToken.sol";
 import "../SaleBase.sol";
 
 
