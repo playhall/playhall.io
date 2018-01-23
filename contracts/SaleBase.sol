@@ -44,8 +44,11 @@ contract SaleBase is Pausable, Contactable {
     // how much wei we have given back to buyers
     uint public weiRefunded;
 
-    //How much ETH each address has bought to this crowdsale
+    // how much ETH each address has bought to this crowdsale
     mapping (address => uint) public boughtAmountOf;
+
+    // whether a buyer bought tokens through other currencies
+    mapping (address=>bool) public isExternalBuyer;
 
     address public admin;
 
@@ -190,6 +193,7 @@ contract SaleBase is Pausable, Contactable {
     */
     function refund() external {
         require(!isMinimumGoalReached() && loadedRefund > 0);
+        require(!isExternalBuyer[msg.sender]);
         uint256 weiValue = boughtAmountOf[msg.sender];
         require(weiValue > 0);
         
@@ -201,6 +205,7 @@ contract SaleBase is Pausable, Contactable {
 
     function registerPayment(address beneficiary, uint tokenAmount, uint weiAmount) public onlyOwnerOrAdmin {
         require(validPurchase(weiAmount));
+        isExternalBuyer[beneficiary] = true;
         mintTokenToBuyer(beneficiary, tokenAmount, weiAmount);
     }
 
