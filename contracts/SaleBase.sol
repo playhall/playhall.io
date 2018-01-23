@@ -116,14 +116,14 @@ contract SaleBase is Pausable, Contactable {
         // calculate token amount to be created
         uint tokenAmount = pricingStrategy.calculateTokenAmount(weiAmount, tokensSold);
         
-        mintTokenToInvestor(beneficiary, tokenAmount, weiAmount);
+        mintTokenToBuyer(beneficiary, tokenAmount, weiAmount);
         
         wallet.transfer(msg.value);
 
         return true;
     }
 
-    function mintTokenToInvestor(address beneficiary, uint tokenAmount, uint weiAmount) internal {
+    function mintTokenToBuyer(address beneficiary, uint tokenAmount, uint weiAmount) internal {
         // update state
         if (boughtAmountOf[beneficiary] == 0) {
             // A new buyer
@@ -183,7 +183,7 @@ contract SaleBase is Pausable, Contactable {
     }
 
     /**
-    * Investors can claim refund.
+    * Buyers can claim refund.
     *
     * Note that any refunds from proxy buyers should be handled separately,
     * and not through this contract.
@@ -201,7 +201,7 @@ contract SaleBase is Pausable, Contactable {
 
     function registerPayment(address beneficiary, uint tokenAmount, uint weiAmount) public onlyOwnerOrAdmin {
         require(validPurchase(weiAmount));
-        mintTokenToInvestor(beneficiary, tokenAmount, weiAmount);
+        mintTokenToBuyer(beneficiary, tokenAmount, weiAmount);
     }
 
     function registerPayments(address[] beneficiaries, uint[] tokenAmounts, uint[] weiAmounts) external onlyOwnerOrAdmin {

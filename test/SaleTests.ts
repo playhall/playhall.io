@@ -24,7 +24,7 @@ contract('Sale', (accounts) => {
     const WEI_MIN_GOAL = 0;
     const OWNER = accounts[0];
     const WALLET = accounts[1];
-    const INVESTORS = [accounts[2], accounts[3]]; 
+    const BUYERS = [accounts[2], accounts[3]]; 
     const ADMIN = accounts[5];
 
     const deployingParams = {

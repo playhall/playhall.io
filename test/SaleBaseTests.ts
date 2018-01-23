@@ -23,7 +23,7 @@ contract('SaleBase', (accounts) => {
     const WEI_MIN_GOAL = 0;
     const OWNER = accounts[0];
     const WALLET = accounts[1];
-    const INVESTORS = [accounts[2], accounts[3]];
+    const BUYERS = [accounts[2], accounts[3]];
     const ADMIN = accounts[5]; 
     let START_TIME, END_TIME: number;
 
@@ -100,7 +100,7 @@ contract('SaleBase', (accounts) => {
     });
 
     it('#3 should not allow to buy before start', async () => {
-        return saleBase.sendTransaction(Utils.txParams(INVESTORS[0], 1))
+        return saleBase.sendTransaction(Utils.txParams(BUYERS[0], 1))
             .should.be.rejected;
     });
 
@@ -112,9 +112,9 @@ contract('SaleBase', (accounts) => {
         const value = 500;
         const balance1 = new BigNumber(await W3.Default.eth.getBalance(WALLET));
 
-        await saleBase.sendTransaction(Utils.txParams(INVESTORS[1], value));
+        await saleBase.sendTransaction(Utils.txParams(BUYERS[1], value));
         
-        const tokens = new BigNumber(await token.balanceOf(INVESTORS[1]));
+        const tokens = new BigNumber(await token.balanceOf(BUYERS[1]));
         const balance2 = new BigNumber(await W3.Default.eth.getBalance(WALLET));
 
         tokens.toNumber().should.equal(RATE.mul(value).toNumber());
@@ -253,21 +253,21 @@ contract('SaleBase', (accounts) => {
         let weiAmounts = [200, 100];
         let expectedWeiRaised = weiAmounts[0] + weiAmounts[1] + 200;
         let expectedTokensSold = tokenAmounts[0] + tokenAmounts[1] + 400;
-        let expectedInvestorsBalances = [
+        let expectedBuyersBalances = [
             tokenAmounts[0] + 400,
             tokenAmounts[1]
         ];
         
         let actualWeiRaised = await saleBase.weiRaised();
         let actualTokenSold = await saleBase.tokensSold();
-        let actualInvestorsBalances = [
+        let actualBuyersBalances = [
             await token.balanceOf(buyers[0]),
             await token.balanceOf(buyers[1]),
         ];
         actualWeiRaised.toNumber().should.be.equal(expectedWeiRaised);
         actualTokenSold.toNumber().should.be.equal(expectedTokensSold);
-        actualInvestorsBalances[0].toNumber().should.be.equal(expectedInvestorsBalances[0]);
-        actualInvestorsBalances[1].toNumber().should.be.equal(expectedInvestorsBalances[1]);
+        actualBuyersBalances[0].toNumber().should.be.equal(expectedBuyersBalances[0]);
+        actualBuyersBalances[1].toNumber().should.be.equal(expectedBuyersBalances[1]);
     });
     
 });
