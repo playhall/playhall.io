@@ -21,7 +21,7 @@ contract('PresalePricingStrategy', (accounts) => {
 
     let strategy: PresalePricingStrategy
 
-    before(async () =>{
+    before(async () => {
         strategy = await PresalePricingStrategy.New(deployParams, {_rate: RATE})
     })
 

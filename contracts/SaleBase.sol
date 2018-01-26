@@ -1,17 +1,17 @@
 pragma solidity ^0.4.17;
 
-import "zeppelin-solidity/contracts/token/MintableToken.sol";
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
 import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "zeppelin-solidity/contracts/ownership/Contactable.sol";
 import "./IPricingStrategy.sol";
+import "./token/PlayHallToken.sol";
 
 
 contract SaleBase is Pausable, Contactable {
     using SafeMath for uint;
   
     // The token being sold
-    MintableToken public token;
+    PlayHallToken public token;
   
     // start and end timestamps where purchases are allowed (both inclusive)
     uint public startTime;
@@ -35,6 +35,9 @@ contract SaleBase is Pausable, Contactable {
     // if weiMinimumGoal will not be reached till endTime, buyers will be able to refund ETH
     uint public weiMinimumGoal;
 
+    // minimum amount of wel, that can be contributed
+    uint public weiMinimumAmount;
+
     // How many distinct addresses have bought
     uint public buyerCount;
 
@@ -47,8 +50,11 @@ contract SaleBase is Pausable, Contactable {
     // how much ETH each address has bought to this crowdsale
     mapping (address => uint) public boughtAmountOf;
 
+    // whether a buyer already bought some tokens
+    mapping (address => bool) public isBuyer;
+
     // whether a buyer bought tokens through other currencies
-    mapping (address=>bool) public isExternalBuyer;
+    mapping (address => bool) public isExternalBuyer;
 
     address public admin;
 
@@ -73,10 +79,11 @@ contract SaleBase is Pausable, Contactable {
         uint _startTime,
         uint _endTime,
         IPricingStrategy _pricingStrategy,
-        MintableToken _token,
+        PlayHallToken _token,
         address _wallet,
         uint _weiMaximumGoal,
         uint _weiMinimumGoal,
+        uint _weiMinimumAmount,
         address _admin
     ) public
     {
@@ -95,6 +102,7 @@ contract SaleBase is Pausable, Contactable {
         wallet = _wallet;
         weiMaximumGoal = _weiMaximumGoal;
         weiMinimumGoal = _weiMinimumGoal;
+        weiMinimumAmount = _weiMinimumAmount;
         admin = _admin;
     }
 
@@ -111,10 +119,11 @@ contract SaleBase is Pausable, Contactable {
 
     // low level token purchase function
     function buyTokens(address beneficiary) public whenNotPaused payable returns (bool) {
-        require(beneficiary != 0x0);
-        require(validPurchase(msg.value));
-    
         uint weiAmount = msg.value;
+
+        require(beneficiary != 0x0);
+        require(weiAmount >= weiMinimumAmount);
+        require(validPurchase(msg.value));
     
         // calculate token amount to be created
         uint tokenAmount = pricingStrategy.calculateTokenAmount(weiAmount, tokensSold);
@@ -127,11 +136,12 @@ contract SaleBase is Pausable, Contactable {
     }
 
     function mintTokenToBuyer(address beneficiary, uint tokenAmount, uint weiAmount) internal {
-        // update state
-        if (boughtAmountOf[beneficiary] == 0) {
+        if (!isBuyer[beneficiary]) {
             // A new buyer
             buyerCount++;
+            isBuyer[beneficiary] = true;
         }
+
         boughtAmountOf[beneficiary] = boughtAmountOf[beneficiary].add(weiAmount);
         weiRaised = weiRaised.add(weiAmount);
         tokensSold = tokensSold.add(tokenAmount);
@@ -142,11 +152,10 @@ contract SaleBase is Pausable, Contactable {
 
     // return true if the transaction can buy tokens
     function validPurchase(uint weiAmount) internal constant returns (bool) {
-        bool withinPeriod = (now >= startTime) && now <= endTime;
-        bool nonZeroPurchase = weiAmount != 0;
+        bool withinPeriod = now >= startTime && now <= endTime;
         bool withinCap = weiRaised.add(weiAmount) <= weiMaximumGoal;
 
-        return withinPeriod && nonZeroPurchase && withinCap;
+        return withinPeriod && withinCap;
     }
 
     // return true if crowdsale event has ended

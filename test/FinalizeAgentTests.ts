@@ -19,24 +19,17 @@ contract('FinalizeAgent', (accounts) => {
 
     const DAY = 60*60*24;
     const ETHER_MAX_GOAL = 5;
-    const RATE = new BigNumber(Math.round((1 / 12000) * 10**18));
     const WEI_MAX_GOAL = new BigNumber(ETHER_MAX_GOAL * 10**18);
     const WEI_MIN_GOAL = 0;
+    const WEI_MIN_AMOUNT = 1;
     const OWNER = accounts[0];
     const WALLET = accounts[1];
-    const BUYERS = [accounts[2], accounts[3]]; 
     const ADMIN = accounts[5];
 
-    const deployingParams = {
-        from : accounts[0],
-        gas: 10000000,
-        gasPrice: 10000000000,
-        value: 0
-    }
+    const deployingParams = Utils.txParams(accounts[0])
 
     const RATES =  [3, 2, 1];
     const LIMITS = [1000, 2000, 3000];
-    const WEI = 7;
 
     const TEAM_FUND = accounts[9];
     const BOUNTY_FUND = accounts[8];
@@ -72,7 +65,7 @@ contract('FinalizeAgent', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT,
+            _weiMinimumAmount: WEI_MIN_AMOUNT,
             _admin: ADMIN
         });
 
@@ -134,9 +127,10 @@ contract('FinalizeAgent', (accounts) => {
         await Utils.increaseTime(START_TIME - now + DAY, OWNER);
         const weiValue = 1000;
         const tokensValue = await pricingStrategy.calculateTokenAmount(weiValue, 0, Utils.txParams(OWNER));
-        const value = Math.round(tokensValue.toNumber() / 60) * FUNDS_PERCENT;
-        const expectedTeamFundBalance = Math.round(value / 100) * TEAM_PERCENT;
-        const expectedBountyFundBalance = Math.round(value / 100) * BOUNTY_PERCENT;
+        console.log(tokensValue.toNumber())
+        const value = Math.floor(tokensValue.toNumber() * FUNDS_PERCENT / 60) ;
+        const expectedTeamFundBalance = Math.floor(value * TEAM_PERCENT / 100) ;
+        const expectedBountyFundBalance = Math.floor(value * BOUNTY_PERCENT / 100) ;
         const expectedReserveFundBalance = value - (expectedTeamFundBalance + expectedBountyFundBalance);
         
         await sale.sendTransaction(Utils.txParams(accounts[1], weiValue));

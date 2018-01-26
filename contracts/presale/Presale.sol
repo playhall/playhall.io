@@ -1,6 +1,6 @@
 pragma solidity ^0.4.17;
 
-import "zeppelin-solidity/contracts/token/MintableToken.sol";
+import "../token/PlayHallToken.sol";
 import "../SaleBase.sol";
 import "../IPricingStrategy.sol";
 
@@ -18,13 +18,28 @@ contract Presale is SaleBase {
         uint _startTime,
         uint _endTime,
         IPricingStrategy _pricingStrategy,
-        MintableToken _token,
+        PlayHallToken _token,
         address _wallet,
         uint _weiMaximumGoal,
         uint _weiMinimumGoal,
+        uint _weiMinimumAmount,
         address _admin
-    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal, _admin) 
+    ) public SaleBase(
+        _startTime,
+        _endTime,
+        _pricingStrategy,
+        _token,
+        _wallet,
+        _weiMaximumGoal,
+        _weiMinimumGoal,
+        _weiMinimumAmount,
+        _admin) 
     {
 
+    }
+
+    function changeTokenOwner(address newOwner) external onlyOwner {
+        require(newOwner != 0x0);
+        token.transferOwnership(newOwner);
     }
 }

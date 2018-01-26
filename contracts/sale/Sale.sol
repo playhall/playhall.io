@@ -1,10 +1,10 @@
 pragma solidity ^0.4.17;
 
-import "zeppelin-solidity/contracts/token/MintableToken.sol";
+import "zeppelin-solidity/contracts/math/SafeMath.sol";
+import "../token/PlayHallToken.sol";
 import "../SaleBase.sol";
 import "../IPricingStrategy.sol";
 import "./IFinalizeAgent.sol";
-import "zeppelin-solidity/contracts/math/SafeMath.sol";
 
 
 /**
@@ -25,29 +25,36 @@ contract Sale is SaleBase {
     address public teamFund;
     address public bountyFund;
     address public reserveFund;
-    uint public fundsPercent;
 
     uint public time;
     function Sale(
         uint _startTime,
         uint _endTime,
         IPricingStrategy _pricingStrategy,
-        MintableToken _token,
+        PlayHallToken _token,
         address _wallet,
         uint _weiMaximumGoal,
         uint _weiMinimumGoal,
-        uint _fundsPercent,
+        uint _weiMinimumAmount,
         address _admin
-    ) SaleBase(_startTime, _endTime, _pricingStrategy, _token, _wallet, _weiMaximumGoal, _weiMinimumGoal, _admin) 
+    ) public SaleBase(
+        _startTime,
+        _endTime,
+        _pricingStrategy,
+        _token,
+        _wallet,
+        _weiMaximumGoal,
+        _weiMinimumGoal,
+        _weiMinimumAmount,
+        _admin)
     {
-        fundsPercent = _fundsPercent;
     }
 
     function finalize() external onlyOwner {
         // Already finalized
         require(!finalized);
 
-        uint tokensForFunds = (token.totalSupply().div(60)).mul(fundsPercent);
+        uint tokensForFunds = token.totalSupply().mul(2).div(3); // 40% of final supply
         token.mint(finalizeAgent, tokensForFunds);
         token.finishMinting();
 
@@ -57,11 +64,11 @@ contract Sale is SaleBase {
         finalized = true;
     }
     
-    function setFinalizeAgent(IFinalizeAgent addr) public onlyOwner {
+    function setFinalizeAgent(IFinalizeAgent _finalizeAgent) public onlyOwner {
         // Don't allow setting bad agent
-        require(addr.isFinalizeAgent());
+        require(_finalizeAgent.isFinalizeAgent());
 
-        finalizeAgent = addr;
+        finalizeAgent = _finalizeAgent;
     }
 
 }

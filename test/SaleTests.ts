@@ -22,6 +22,7 @@ contract('Sale', (accounts) => {
     const RATE = new BigNumber(Math.round((1 / 12000) * 10**18));
     const WEI_MAX_GOAL = new BigNumber(ETHER_MAX_GOAL * 10**18);
     const WEI_MIN_GOAL = 0;
+    const WEI_MIN_AMOUNT = 1;
     const OWNER = accounts[0];
     const WALLET = accounts[1];
     const BUYERS = [accounts[2], accounts[3]]; 
@@ -74,7 +75,7 @@ contract('Sale', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
-            _fundsPercent: FUNDS_PERCENT,
+            _weiMinimumAmount: WEI_MIN_AMOUNT,
             _admin: ADMIN
         });
 

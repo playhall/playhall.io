@@ -55,10 +55,9 @@ contract FinalizeAgent is IFinalizeAgent {
         require(msg.sender == address(crowdsale));
         
         uint tokensForFunds = token.balanceOf(this);
-        uint tokensPercent = tokensForFunds.div(100);
-        uint tokensForTeam = tokensPercent.mul(teamPercent);
-        uint tokensForBounty = tokensPercent.mul(bountyPercent);
-        uint tokensForReserve = tokensForFunds - (tokensForTeam + tokensForBounty);
+        uint tokensForTeam = tokensForFunds.mul(teamPercent).div(100);
+        uint tokensForBounty = tokensForFunds.mul(bountyPercent).div(100);
+        uint tokensForReserve = tokensForFunds.sub(tokensForTeam).sub(tokensForBounty);
 
         token.safeTransfer(teamFund, tokensForTeam);
         token.safeTransfer(bountyFund, tokensForBounty);

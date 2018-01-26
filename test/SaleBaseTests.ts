@@ -18,9 +18,10 @@ contract('SaleBase', (accounts) => {
 
     const DAY = 60*60*24;
     const ETHER_MAX_GOAL = 5;
-    const RATE = new BigNumber(Math.round((1 / 12000) * 10**18));
-    const WEI_MAX_GOAL = new BigNumber(ETHER_MAX_GOAL * 10**18);
+    const RATE = 12000;
+    const WEI_MAX_GOAL = new BigNumber(ETHER_MAX_GOAL).mul("1e18");
     const WEI_MIN_GOAL = 0;
+    const WEI_MIN_AMOUNT = 3;
     const OWNER = accounts[0];
     const WALLET = accounts[1];
     const BUYERS = [accounts[2], accounts[3]];
@@ -52,6 +53,7 @@ contract('SaleBase', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
+            _weiMinimumAmount: WEI_MIN_AMOUNT,
             _admin: ADMIN
         })
         await token.transferOwnership(saleBase.address, Utils.txParams(OWNER));
@@ -76,6 +78,7 @@ contract('SaleBase', (accounts) => {
             _wallet: WALLET,
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
+            _weiMinimumAmount: WEI_MIN_AMOUNT,
             _admin: ADMIN
         });
         
@@ -117,18 +120,23 @@ contract('SaleBase', (accounts) => {
         const tokens = new BigNumber(await token.balanceOf(BUYERS[1]));
         const balance2 = new BigNumber(await W3.Default.eth.getBalance(WALLET));
 
-        tokens.toNumber().should.equal(RATE.mul(value).toNumber());
+        tokens.toNumber().should.equal(RATE * value);
         balance2.toNumber().should.equal(balance1.plus(value).toNumber());
     });
 
-    it('#5 should not allow to buy more then hard cap', async () => {
+    it('#5 should not allow to buy less then minimum amount', async () => {
+        const value = WEI_MIN_AMOUNT - 1
+        return saleBase.sendTransaction(Utils.txParams(accounts[2], value)).should.be.rejected;
+    });
+
+    it('#6 should not allow to buy more then hard cap', async () => {
         const weiCap = await saleBase.weiMaximumGoal();
         const weiRaised = await saleBase.weiRaised();
         await saleBase.sendTransaction(Utils.txParams(accounts[2], weiCap.minus(weiRaised)));
         return saleBase.sendTransaction(Utils.txParams(accounts[2], 1)).should.be.rejected;
     });
 
-    it('#6 should now allow to buy after endTime', async () => {
+    it('#7 should now allow to buy after endTime', async () => {
         saleBase = await deploySaleBase(10,11);
         const now = await Utils.getLastBlockTime();
         const endTime = (await saleBase.endTime()).toNumber();
@@ -138,27 +146,27 @@ contract('SaleBase', (accounts) => {
             .should.be.rejected;
     });
 
-    it("#7 should not allow to change admin from non-owner address", async() => {
+    it("#8 should not allow to change admin from non-owner address", async() => {
         saleBase = await deploySaleBase(10*DAY, 15*DAY);
         await saleBase.setAdmin(accounts[2], Utils.txParams(accounts[2]))
             .should.be.rejected;
     });
 
-    it("#8 should allow to set admin adress to 0x0", async()=>{
+    it("#9 should allow to set admin adress to 0x0", async()=>{
         const expectedAddress = "0x0000000000000000000000000000000000000000";
         await saleBase.setAdmin("0x0", Utils.txParams(OWNER));
         let admin = await saleBase.admin();
         admin.should.be.equal(expectedAddress);
     });
 
-    it("#9 should  allow to change admin from owner address", async() => {
+    it("#10 should  allow to change admin from owner address", async() => {
         const admin = accounts[4];
         await saleBase.setAdmin(admin, Utils.txParams(OWNER));
         const newAdmin = await saleBase.admin();
         newAdmin.should.be.equal(admin);
     });
 
-    it("#10 should allow register payment from admin address", async() => {
+    it("#11 should allow register payment from admin address", async() => {
         let now = await Utils.getLastBlockTime();
         let startTime = await saleBase.startTime();
         Utils.increaseTime(startTime.toNumber() - now + 30, OWNER);
@@ -177,7 +185,7 @@ contract('SaleBase', (accounts) => {
         weiRaised.toNumber().should.be.equal(weiAmount);
     });
 
-    it("#11 should not allow register payment from non-admin or non-onwer address", async()=>{  
+    it("#12 should not allow register payment from non-admin or non-onwer address", async()=>{  
         let beneficiary = accounts[5];
         let tokenAmount = 200;
         let weiAmount = 100;
@@ -190,7 +198,7 @@ contract('SaleBase', (accounts) => {
     });
 
 
-    it("#12 should allow register payment from owner address", async() => {
+    it("#13 should allow register payment from owner address", async() => {
         let beneficiary = accounts[5];
         let tokenAmount = 200;
         let weiAmount = 100;
@@ -204,19 +212,26 @@ contract('SaleBase', (accounts) => {
         weiRaised.toNumber().should.be.equal(2*weiAmount);
     });
 
-    it("#13 should not allow register payment with zero value", async()=>{  
+    it("#14 should allow register payment with zero value", async()=>{  
         let beneficiary = accounts[5];
         let tokenAmount = 200;
         let weiAmount = 0;
+
+        let tokensSold1 = await saleBase.tokensSold();
+
         await saleBase.registerPayment(
             beneficiary, 
             tokenAmount, 
             weiAmount, 
             Utils.txParams(OWNER)
-        ).should.be.rejected;
+        );
+
+        let tokensSold2 = await saleBase.tokensSold();
+
+        tokensSold2.minus(tokensSold1).toNumber().should.equal(tokenAmount)
     });
 
-    it("#14 should not allow register payments from non-onwer or non-admin address", async()=>{  
+    it("#15 should not allow register payments from non-onwer or non-admin address", async()=>{  
         let beneficiaries = [accounts[5], accounts[6]];
         let tokenAmounts = [200, 100];
         let weiAmounts = [100, 50];
@@ -228,7 +243,7 @@ contract('SaleBase', (accounts) => {
         ).should.be.rejected;
     });
     
-    it("#15 should allow register payments from owner or admin address", async()=>{  
+    it("#16 should allow register payments from owner or admin address", async()=>{  
         let beneficiaries = [accounts[5], accounts[6]];
         let tokenAmounts = [200, 100];
         let weiAmounts = [100, 50];
@@ -247,9 +262,9 @@ contract('SaleBase', (accounts) => {
         ).should.be.fulfilled;
     });
 
-    it("#16 should have correct buyers amount of tokens & wei", async()=>{
+    it("#17 should have correct buyers amount of tokens & wei", async()=>{
         let buyers = [accounts[5], accounts[6]];
-        let tokenAmounts = [400, 200];
+        let tokenAmounts = [600, 200];
         let weiAmounts = [200, 100];
         let expectedWeiRaised = weiAmounts[0] + weiAmounts[1] + 200;
         let expectedTokensSold = tokenAmounts[0] + tokenAmounts[1] + 400;
