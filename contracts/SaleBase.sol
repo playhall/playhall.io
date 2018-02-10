@@ -93,7 +93,7 @@ contract SaleBase is Pausable, Contactable {
         require(address(_token) != 0x0);
         require(_wallet != 0x0);
         require(_weiMaximumGoal > 0);
-        require(address(_admin) != 0);
+        require(_admin != 0x0);
 
         startTime = _startTime;
         endTime = _endTime;

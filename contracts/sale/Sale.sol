@@ -21,11 +21,7 @@ contract Sale is SaleBase {
     bool public finalized = false;
 
     IFinalizeAgent public finalizeAgent;
-
-    address public teamFund;
-    address public bountyFund;
-    address public reserveFund;
-
+    
     uint public time;
     function Sale(
         uint _startTime,
