@@ -56,6 +56,7 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
             receiver.tokenFallback(msg.sender, _value, _data);
         }
 
+        Transfer(msg.sender, _to, _value);
         Transfer(msg.sender, _to, _value, _data);
         return true;
     }
@@ -101,6 +102,7 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
             receiver.tokenFallback(msg.sender, _value, _data);
         }
 
+        Transfer(_from, _to, _value);
         Transfer(_from, _to, _value, _data);
         return true;
     }
