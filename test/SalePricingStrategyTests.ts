@@ -86,15 +86,15 @@ contract('SalePricingStrategy', (accounts) => {
     })
 
     it("#9 should should calculate amount correctly, if tokens go through slots", async () => {
-        const tokensSold = 80
+        const weiRaised = 80
         const wei = 90
 
-        const w1 = (LIMITS[0] - tokensSold) / RATES[0]
-        const w2 = (LIMITS[1] - LIMITS[0]) / RATES[1]
-        const w3 = wei - w2 - w1 
-        const expected = w1 * RATES[0] + w2 * RATES[1] + w3 * RATES[2]
+        const w1 = (LIMITS[0] - weiRaised)
+        const w2 = wei - w1
+ 
+        const expected = w1 * RATES[0] + w2 * RATES[1]
         
-        const result = await strategy.calculateTokenAmount(wei, tokensSold)
+        const result = await strategy.calculateTokenAmount(wei, weiRaised)
 
         result.toNumber().should.equal(Math.ceil(expected))
     })

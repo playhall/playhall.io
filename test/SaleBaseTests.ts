@@ -40,7 +40,8 @@ contract('SaleBase', (accounts) => {
     let pricingStrategy: PresalePricingStrategy;
 
     let deploySaleBase = async (deltaStart, deltaEnd) => {
-        token = await PlayHallToken.New(deployingParams);
+        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
+        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
         pricingStrategy = await PresalePricingStrategy.New(deployingParams, {
             _rate: RATE
         });
@@ -61,7 +62,7 @@ contract('SaleBase', (accounts) => {
     }
 
     before(async()=>{        
-        token = await PlayHallToken.New(deployingParams);
+        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
 
         pricingStrategy = await PresalePricingStrategy.New(deployingParams, {
             _rate: RATE

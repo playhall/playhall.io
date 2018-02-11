@@ -47,8 +47,8 @@ contract('FinalizeAgent', (accounts) => {
     let START_TIME: number;
 
     before(async () => {
-        token = await PlayHallToken.New(deployingParams);
-
+        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
+        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
         pricingStrategy = await SalePricingStrategy.New(deployingParams, {
             _rates: RATES,
             _limits: LIMITS
@@ -66,7 +66,9 @@ contract('FinalizeAgent', (accounts) => {
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
             _weiMinimumAmount: WEI_MIN_AMOUNT,
-            _admin: ADMIN
+            _admin: ADMIN,
+            _weiRaised: 0,
+            _tokensSold: 0
         });
 
         finalizeAgent = await FinalizeAgent.New(deployingParams, {
@@ -134,7 +136,6 @@ contract('FinalizeAgent', (accounts) => {
         const expectedReserveFundBalance = value - (expectedTeamFundBalance + expectedBountyFundBalance);
         
         await sale.sendTransaction(Utils.txParams(accounts[1], weiValue));
-
         await sale.finalize(Utils.txParams(OWNER));
         
         let teamFundBalance = await token.balanceOf(TEAM_FUND);

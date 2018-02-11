@@ -27,6 +27,8 @@ contract('Sale', (accounts) => {
     const WALLET = accounts[1];
     const BUYERS = [accounts[2], accounts[3]]; 
     const ADMIN = accounts[5];
+    const WEI_RAISED = 5;
+    const TOKENS_SOLD = 10;
 
     const deployingParams = {
         from : accounts[0],
@@ -58,7 +60,8 @@ contract('Sale', (accounts) => {
     before(async()=>{
         
                 
-        token = await PlayHallToken.New(deployingParams);
+        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
+        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
 
         pricingStrategy = await SalePricingStrategy.New(deployingParams, {
             _rates: RATES,
@@ -76,7 +79,9 @@ contract('Sale', (accounts) => {
             _weiMaximumGoal: WEI_MAX_GOAL,
             _weiMinimumGoal: WEI_MIN_GOAL,
             _weiMinimumAmount: WEI_MIN_AMOUNT,
-            _admin: ADMIN
+            _admin: ADMIN,
+            _weiRaised: WEI_RAISED,
+            _tokensSold: TOKENS_SOLD
         });
 
         finalizeAgent = await FinalizeAgent.New(deployingParams, {
@@ -98,10 +103,14 @@ contract('Sale', (accounts) => {
         const startTime = await sale.startTime();
         const endTime = await sale.endTime();
         const wallet = await sale.wallet();
+        const weiRaised = await sale.weiRaised();
+        const tokensSold = await sale.tokensSold();
 
         startTime.toNumber().should.equal(START_TIME);
         endTime.toNumber().should.equal(END_TIME);
         wallet.should.equal(WALLET);
+        weiRaised.toNumber().should.equal(WEI_RAISED);
+        tokensSold.toNumber().should.equal(TOKENS_SOLD);
     });
 
     it("#2 should stop token minting after finalize crowdsale", async() => {
