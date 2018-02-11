@@ -5,11 +5,23 @@ const PricingStrategy = artifacts.require("SalePricingStrategy")
 const Token = artifacts.require("PlayHallToken")
 
 module.exports = function(deployer, network, accounts) {
-  let startTime, endTime, rats, limits, weiMaximumGoal, weiMinimumGoal, weiMinimumAmount, wallet, admin
+  let startTime, 
+      endTime,
+      rates,
+      limits,
+      weiMaximumGoal,
+      weiMinimumGoal,
+      weiMinimumAmount,
+      wallet,
+      admin,
+      weiRaised,
+      tokensSold
 
   rates = [11000, 10500, 10000]
   limits = [121000000, 157500000, 190000000]
-  if(network == "live"){
+  weiRaised = 0
+  tokensSold = 0
+  if(network == "live") {
     startTime = 0
     endTime = 0
     weiMaximumGoal = web3.toWei(50000, "ether")
@@ -17,6 +29,15 @@ module.exports = function(deployer, network, accounts) {
     weiMinimumAmount = web3.toWei(0.01, "ether")
     wallet = "0x0"
     admin = "0x0"
+  } else if(network == "kovan") {
+    startTime = 1517637600
+    endTime = 1517670000
+    weiMaximumGoal = web3.toWei(5, "ether")
+    weiMinimumGoal = web3.toWei(0.15, "ether")
+    weiMinimumAmount = web3.toWei(0.01, "ether")
+    wallet = "0x00cd2c836a985fEC84Cf96aBBb4740f665d36045"
+    admin = "0x0851Ee225Df973850ebcE3188A7CAa38BF698572"
+    rates = rates.map(x => x * 10000)
   } else {
     const now = web3.eth.getBlock(web3.eth.blockNumber).timestamp
     startTime = now + 100
@@ -45,7 +66,9 @@ module.exports = function(deployer, network, accounts) {
     weiMaximumGoal,
     weiMinimumGoal,
     weiMinimumAmount,
-    admin
+    admin,
+    weiRaised,
+    tokensSold
   ))
   .then(() => Presale.deployed())
   .then((presale) => presale.changeTokenOwner(Sale.address))

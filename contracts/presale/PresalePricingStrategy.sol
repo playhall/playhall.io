@@ -24,7 +24,7 @@ contract PresalePricingStrategy is IPricingStrategy {
     }
 
     /** Calculate the current price for buy in amount. */
-    function calculateTokenAmount(uint weiAmount, uint tokensSold) public view returns (uint tokenAmount) {
+    function calculateTokenAmount(uint weiAmount, uint weiRaised) public view returns (uint tokenAmount) {
         return weiAmount.mul(rate);
     }
 

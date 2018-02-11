@@ -27,27 +27,28 @@ contract SalePricingStrategy is IPricingStrategy {
     }
 
     /** Calculate the current price for buy in amount. */
-    function calculateTokenAmount(uint weiAmount, uint tokensSold) public view returns (uint tokenAmount) {
+    function calculateTokenAmount(uint weiAmount, uint weiRaised) public view returns (uint tokenAmount) {
         if (weiAmount == 0) {
             return 0;
         }
 
-        var (rate, index) = currentRate(tokensSold);
+        var (rate, index) = currentRate(weiRaised);
         tokenAmount = weiAmount.mul(rate);
 
         // if we crossed slot border, recalculate remaining tokens according to next slot price
-        if (tokensSold.add(tokenAmount) > limits[index]) {
-            uint currentSlotTokens = limits[index].sub(tokensSold);
-            uint remainingWei = weiAmount.sub(currentSlotTokens.div(rates[index]));
+        if (weiRaised.add(weiAmount) > limits[index]) {
+            uint currentSlotWei = limits[index].sub(weiRaised);
+            uint currentSlotTokens = currentSlotWei.mul(rate);
+            uint remainingWei = weiAmount.sub(currentSlotWei);
             tokenAmount = currentSlotTokens.add(calculateTokenAmount(remainingWei, limits[index]));
         }
     }
 
-    function currentRate(uint tokensSold) public view returns (uint rate, uint8 index) {
+    function currentRate(uint weiRaised) public view returns (uint rate, uint8 index) {
         rate = rates[0];
         index = 0;
 
-        while (tokensSold >= limits[index]) {
+        while (weiRaised >= limits[index]) {
             rate = rates[++index];
         }
     }

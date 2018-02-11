@@ -126,7 +126,7 @@ contract SaleBase is Pausable, Contactable {
         require(validPurchase(msg.value));
     
         // calculate token amount to be created
-        uint tokenAmount = pricingStrategy.calculateTokenAmount(weiAmount, tokensSold);
+        uint tokenAmount = pricingStrategy.calculateTokenAmount(weiAmount, weiRaised);
         
         mintTokenToBuyer(beneficiary, tokenAmount, weiAmount);
         
@@ -146,7 +146,7 @@ contract SaleBase is Pausable, Contactable {
         weiRaised = weiRaised.add(weiAmount);
         tokensSold = tokensSold.add(tokenAmount);
     
-        token.mint(beneficiary, tokenAmount);
+        token.mint(beneficiary, tokenAmount, true);
         TokenPurchase(msg.sender, beneficiary, weiAmount, tokenAmount);
     }
 

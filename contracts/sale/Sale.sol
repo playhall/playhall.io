@@ -32,7 +32,9 @@ contract Sale is SaleBase {
         uint _weiMaximumGoal,
         uint _weiMinimumGoal,
         uint _weiMinimumAmount,
-        address _admin
+        address _admin,
+        uint _weiRaised,
+        uint _tokensSold
     ) public SaleBase(
         _startTime,
         _endTime,
@@ -44,6 +46,8 @@ contract Sale is SaleBase {
         _weiMinimumAmount,
         _admin)
     {
+        weiRaised = _weiRaised;
+        tokensSold = _tokensSold;
     }
 
     function finalize() external onlyOwner {
@@ -51,7 +55,7 @@ contract Sale is SaleBase {
         require(!finalized);
 
         uint tokensForFunds = token.totalSupply().mul(2).div(3); // 40% of final supply
-        token.mint(finalizeAgent, tokensForFunds);
+        token.mint(finalizeAgent, tokensForFunds, false);
         token.finishMinting();
 
         // Finalizing is optional. We only call it if we are given a finalizing agent.
