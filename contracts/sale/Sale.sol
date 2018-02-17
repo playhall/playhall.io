@@ -58,7 +58,6 @@ contract Sale is SaleBase {
         token.mint(finalizeAgent, tokensForFunds, false);
         token.finishMinting();
 
-        // Finalizing is optional. We only call it if we are given a finalizing agent.
         finalizeAgent.finalizeCrowdsale();
 
         finalized = true;

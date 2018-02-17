@@ -16,23 +16,22 @@ contract('VestedFundTests', (accounts) => {
     const AMOUNT = 1000
     const CLIFF = DAY
     const DURATION = 5 * DAY
-    const ADMIN = accounts[2]
 
     let token: PlayHallToken
     let fund: VestedFund
 
     before(async () => {
-        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER), {_admin: ADMIN})
-        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
+        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER))
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
         fund = await VestedFund.New(W3.TC.txParamsDefaultDeploy(OWNER), { _token: token.address})
         await token.mint(fund.address, 2 * AMOUNT, true, Utils.txParams(OWNER))
     })
 
-    it("should allow to create vested payments correctly", async () => {
+    it("#1 should allow to create vested payments correctly", async () => {
         const start = await Utils.getLastBlockTime() + 10 * DAY
         const fundBalance1 = await token.balanceOf(fund.address)
 
-        await token.removeFromFreezedList(fund.address, Utils.txParams(ADMIN))
+        await token.removeFromFreezedList(fund.address, Utils.txParams(OWNER))
         await fund.makeVestedPayment(BENEFICIARY, AMOUNT, start, CLIFF, DURATION, true, Utils.txParams(OWNER))
 
         const fundBalance2 = await token.balanceOf(fund.address)
@@ -52,7 +51,7 @@ contract('VestedFundTests', (accounts) => {
         fundBalance2.minus(fundBalance1).toNumber().should.equal(-AMOUNT)
     })
 
-    it("should allow to release payments correctly", async () => {
+    it("#2 should allow to release payments correctly", async () => {
         const paymentFund = await TokenVesting.At(await fund.vestedPayments(BENEFICIARY, 0))
         const start = await paymentFund.start()
         const now = await Utils.getLastBlockTime()
@@ -71,7 +70,7 @@ contract('VestedFundTests', (accounts) => {
         beneficiaryBalance2.minus(beneficiaryBalance1).toNumber().should.equal(AMOUNT)
     })
 
-    it("should allow to revoke payments correctly", async () => {
+    it("#3 should allow to revoke payments correctly", async () => {
         const start = await Utils.getLastBlockTime() + 10 * DAY
         const fundBalance1 = await token.balanceOf(fund.address)
         

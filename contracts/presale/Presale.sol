@@ -38,8 +38,10 @@ contract Presale is SaleBase {
 
     }
 
-    function changeTokenOwner(address newOwner) external onlyOwner {
-        require(newOwner != 0x0);
-        token.transferOwnership(newOwner);
+    function changeTokenMinter(address newMinter) external onlyOwner {
+        require(newMinter != 0x0);
+        require(hasEnded());
+
+        token.setMinter(newMinter);
     }
 }

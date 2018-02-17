@@ -13,14 +13,13 @@ contract('FundTests', (accounts) => {
     const OWNER = accounts[0]
     const BENEFICIARY = accounts[1]
     const AMOUNT = 1000
-    const ADMIN = accounts[2]
 
     let token: PlayHallToken
     let fund: Fund
 
     before(async () => {
-        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER), {_admin: ADMIN})
-        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
+        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER))
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
         fund = await Fund.New(W3.TC.txParamsDefaultDeploy(OWNER), { _token: token.address})
         await token.mint(fund.address, AMOUNT, true, Utils.txParams(OWNER))
     })
@@ -29,7 +28,7 @@ contract('FundTests', (accounts) => {
         const fundBalance1 = await token.balanceOf(fund.address)
         const beneficiaryBalance1 = await token.balanceOf(BENEFICIARY)
 
-        await token.removeFromFreezedList(fund.address, Utils.txParams(ADMIN))
+        await token.removeFromFreezedList(fund.address, Utils.txParams(OWNER))
         await fund.makePayment(BENEFICIARY, AMOUNT, Utils.txParams(OWNER))
 
         const fundBalance2 = await token.balanceOf(fund.address)

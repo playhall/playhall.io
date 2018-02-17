@@ -1,13 +1,12 @@
 pragma solidity ^0.4.17;
 
 import "zeppelin-solidity/contracts/math/SafeMath.sol";
-import "zeppelin-solidity/contracts/token/ERC20.sol";
 import "zeppelin-solidity/contracts/ownership/Contactable.sol";
 import "./ERC223.sol";
 import "./TokenReciever.sol";
 
 
-contract PlayHallToken is ERC20, ERC223, Contactable {
+contract PlayHallToken is ERC223, Contactable {
     using SafeMath for uint;
 
     string constant public name = "PlayHall Token";
@@ -16,16 +15,22 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
 
     bool public isActivated = false;
 
-    mapping (address => uint256) balances;
-    mapping (address => mapping (address => uint256)) internal allowed;
+    mapping (address => uint) balances;
+    mapping (address => mapping (address => uint)) internal allowed;
     mapping (address => bool) public freezedList;
     
-    address public admin;
+    // address, who is allowed to issue new tokens (presale and sale contracts)
+    address public minter;
 
     bool public mintingFinished = false;
 
-    event Mint(address indexed to, uint256 amount);
-    event MintFinished();
+    event Mint(address indexed to, uint amount);
+    event MintingFinished();
+
+    modifier onlyMinter() {
+        require(msg.sender == minter);
+        _;
+    }
 
     modifier canMint() {
         require(!mintingFinished);
@@ -37,14 +42,8 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
         _;
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin);
-        _;
-    }
-
-    function PlayHallToken(address _admin) {
-        require(_admin != 0x0);
-        admin = _admin;
+    function PlayHallToken() {
+        minter = msg.sender;
     }
 
     /**
@@ -52,7 +51,7 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
     * @param _to The address to transfer to.
     * @param _value The amount to be transferred.
     */
-    function transfer(address _to, uint256 _value) public returns (bool) {
+    function transfer(address _to, uint _value) public returns (bool) {
         bytes memory empty;
         return transfer(_to, _value, empty);
     }
@@ -63,7 +62,7 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
     * @param _value The amount to be transferred.
     * @param _data Optional metadata.
     */
-    function transfer(address _to, uint256 _value, bytes _data) public whenActivated returns (bool) {
+    function transfer(address _to, uint _value, bytes _data) public whenActivated returns (bool) {
         require(_to != address(0));
         require(_value <= balances[msg.sender]);
         require(!freezedList[msg.sender]);
@@ -85,9 +84,9 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
     /**
     * @dev Gets the balance of the specified address.
     * @param _owner The address to query the the balance of.
-    * @return An uint256 representing the amount owned by the passed address.
+    * @return An uint representing the amount owned by the passed address.
     */
-    function balanceOf(address _owner) public view returns (uint256 balance) {
+    function balanceOf(address _owner) public view returns (uint balance) {
         return balances[_owner];
     }
 
@@ -95,9 +94,9 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
      * @dev Transfer tokens from one address to another
      * @param _from address The address which you want to send tokens from
      * @param _to address The address which you want to transfer to
-     * @param _value uint256 the amount of tokens to be transferred
+     * @param _value uint the amount of tokens to be transferred
      */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+    function transferFrom(address _from, address _to, uint _value) public returns (bool) {
         bytes memory empty;
         return transferFrom(_from, _to, _value, empty);
     }
@@ -106,10 +105,10 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
      * @dev Transfer tokens from one address to another
      * @param _from address The address which you want to send tokens from
      * @param _to address The address which you want to transfer to
-     * @param _value uint256 the amount of tokens to be transferred
+     * @param _value uint the amount of tokens to be transferred
      * @param _data Optional metadata.
      */
-    function transferFrom(address _from, address _to, uint256 _value, bytes _data) public whenActivated returns (bool) {
+    function transferFrom(address _from, address _to, uint _value, bytes _data) public whenActivated returns (bool) {
         require(_to != address(0));
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
@@ -139,7 +138,8 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
      * @param _spender The address which will spend the funds.
      * @param _value The amount of tokens to be spent.
      */
-    function approve(address _spender, uint256 _value) public returns (bool) {
+    function approve(address _spender, uint _value) public returns (bool) {
+        require(_value == 0 || allowed[msg.sender][_spender] == 0);
         allowed[msg.sender][_spender] = _value;
         Approval(msg.sender, _spender, _value);
         return true;
@@ -149,9 +149,9 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
      * @dev Function to check the amount of tokens that an owner allowed to a spender.
      * @param _owner address The address which owns the funds.
      * @param _spender address The address which will spend the funds.
-     * @return A uint256 specifying the amount of tokens still available for the spender.
+     * @return A uint specifying the amount of tokens still available for the spender.
      */
-    function allowance(address _owner, address _spender) public view returns (uint256) {
+    function allowance(address _owner, address _spender) public view returns (uint) {
         return allowed[_owner][_spender];
     }
 
@@ -192,25 +192,17 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
         return true;
     }
 
-    /**
-     * Activation of the token allows all tokenholders to operate with the token
-     */
-    function activate() external onlyAdmin returns (bool) {
-        isActivated = true;
-        return true;
-    }
-
       /**
      * @dev Function to mint tokens
      * @param _to The address that will receive the minted tokens.
      * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address _to, uint256 _amount, bool freeze) onlyOwner canMint public returns (bool) {
+    function mint(address _to, uint _amount, bool freeze) canMint onlyMinter external returns (bool) {
         totalSupply = totalSupply.add(_amount);
         balances[_to] = balances[_to].add(_amount);
         if (freeze) {
-            pushToFreezedList(_to);
+            freezedList[_to] = true;
         }
         Mint(_to, _amount);
         Transfer(address(0), _to, _amount);
@@ -221,9 +213,32 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
      * @dev Function to stop minting new tokens.
      * @return True if the operation was successful.
      */
-    function finishMinting() onlyOwner canMint public returns (bool) {
+    function finishMinting() canMint onlyMinter external returns (bool) {
         mintingFinished = true;
-        MintFinished();
+        MintingFinished();
+        return true;
+    }
+    
+    /**
+     * Minter can pass it's role to another address
+     */
+    function setMinter(address _minter) external onlyMinter {
+        require(_minter != 0x0);
+        minter = _minter;
+    }
+
+    /**
+     * Owner can unfreeze any address
+     */
+    function removeFromFreezedList(address user) external onlyOwner {
+        freezedList[user] = false;
+    }
+
+    /**
+     * Activation of the token allows all tokenholders to operate with the token
+     */
+    function activate() external onlyOwner returns (bool) {
+        isActivated = true;
         return true;
     }
 
@@ -234,22 +249,5 @@ contract PlayHallToken is ERC20, ERC223, Contactable {
               length := extcodesize(_addr)
         }
         return (length>0);
-    }
-
-    function addToFreezedList(address user) onlyAdmin public {
-        pushToFreezedList(user);
-    }
-
-    function pushToFreezedList(address user) internal {
-        freezedList[user] = true;
-    }
-
-    function removeFromFreezedList(address user) onlyAdmin public {
-        freezedList[user] = false;
-    }
-
-    function setAdmin(address _admin) onlyAdmin public {
-        require(_admin != 0x0);
-        admin = _admin;
     }
 }

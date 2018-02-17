@@ -74,6 +74,7 @@ contract SaleBase is Pausable, Contactable {
 
     // a refund was processed for an buyer
     event Refund(address buyer, uint weiAmount);
+    event RefundLoaded(uint amount);
 
     function SaleBase(
         uint _startTime,
@@ -159,7 +160,7 @@ contract SaleBase is Pausable, Contactable {
     }
 
     // return true if crowdsale event has ended
-    function hasEnded() external constant returns (bool) {
+    function hasEnded() public constant returns (bool) {
         bool capReached = weiRaised >= weiMaximumGoal;
         bool afterEndTime = now > endTime;
         
@@ -188,10 +189,13 @@ contract SaleBase is Pausable, Contactable {
     * The team can transfer the funds back on the smart contract in the case the minimum goal was not reached..
     */
     function loadRefund() external payable {
+        require(msg.sender == wallet);
         require(msg.value > 0);
         require(!isMinimumGoalReached());
         
         loadedRefund = loadedRefund.add(msg.value);
+
+        RefundLoaded(msg.value);
     }
 
     /**
@@ -203,13 +207,14 @@ contract SaleBase is Pausable, Contactable {
     function refund() external {
         require(!isMinimumGoalReached() && loadedRefund > 0);
         require(!isExternalBuyer[msg.sender]);
-        uint256 weiValue = boughtAmountOf[msg.sender];
+        uint weiValue = boughtAmountOf[msg.sender];
         require(weiValue > 0);
         
         boughtAmountOf[msg.sender] = 0;
         weiRefunded = weiRefunded.add(weiValue);
-        Refund(msg.sender, weiValue);
         msg.sender.transfer(weiValue);
+
+        Refund(msg.sender, weiValue);
     }
 
     function registerPayment(address beneficiary, uint tokenAmount, uint weiAmount) public onlyOwnerOrAdmin {

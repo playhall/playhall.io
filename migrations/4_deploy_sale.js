@@ -70,6 +70,6 @@ module.exports = function(deployer, network, accounts) {
     weiRaised,
     tokensSold
   ))
-  .then(() => Presale.deployed())
-  .then((presale) => presale.changeTokenOwner(Sale.address))
+  //.then(() => Presale.deployed())
+  //.then((presale) => presale.changeTokenMinter(Sale.address))
 };

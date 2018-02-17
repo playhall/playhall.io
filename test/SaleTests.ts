@@ -58,10 +58,8 @@ contract('Sale', (accounts) => {
     let finalizeAgent: FinalizeAgent;
 
     before(async()=>{
-        
-                
-        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
-        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
+        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER))
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
 
         pricingStrategy = await SalePricingStrategy.New(deployingParams, {
             _rates: RATES,
@@ -95,7 +93,7 @@ contract('Sale', (accounts) => {
             _reserveFund: RESERVE_FUND
         });
         
-        await token.transferOwnership(sale.address, Utils.txParams(OWNER, 0));
+        await token.setMinter(sale.address, Utils.txParams(OWNER));
         await sale.setFinalizeAgent(finalizeAgent.address, Utils.txParams(OWNER));
     })
 

@@ -29,7 +29,7 @@ contract('SaleBase', (accounts) => {
     let START_TIME, END_TIME: number;
 
     const deployingParams = {
-        from : accounts[0],
+        from : OWNER,
         gas: 10000000,
         gasPrice: 10000000000,
         value: 0
@@ -40,8 +40,8 @@ contract('SaleBase', (accounts) => {
     let pricingStrategy: PresalePricingStrategy;
 
     let deploySaleBase = async (deltaStart, deltaEnd) => {
-        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
-        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
+        token = await PlayHallToken.New(deployingParams);
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
         pricingStrategy = await PresalePricingStrategy.New(deployingParams, {
             _rate: RATE
         });
@@ -57,12 +57,13 @@ contract('SaleBase', (accounts) => {
             _weiMinimumAmount: WEI_MIN_AMOUNT,
             _admin: ADMIN
         })
-        await token.transferOwnership(saleBase.address, Utils.txParams(OWNER));
+        await token.setMinter(saleBase.address, Utils.txParams(OWNER));
         return saleBase;
     }
 
     before(async()=>{        
-        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
+        token = await PlayHallToken.New(W3.TC.txParamsDefaultDeploy(OWNER))
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
 
         pricingStrategy = await PresalePricingStrategy.New(deployingParams, {
             _rate: RATE
@@ -83,7 +84,7 @@ contract('SaleBase', (accounts) => {
             _admin: ADMIN
         });
         
-        await token.transferOwnership(saleBase.address, Utils.txParams(OWNER, 0));
+        await token.setMinter(saleBase.address, Utils.txParams(OWNER));
     })
 
     it("#1 should have correct parameters", async () => {

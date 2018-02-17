@@ -46,5 +46,5 @@ module.exports = function(deployer, network, accounts) {
     admin
   ))
   .then(() => Token.deployed())
-  .then((token) => token.transferOwnership(Presale.address))
+  .then((token) => token.setMinter(Presale.address))
 };

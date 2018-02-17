@@ -6,9 +6,9 @@ import "../token/TokenReciever.sol";
 contract TokenVestingERC223 is TokenVesting, TokenReciever {
     function TokenVestingERC223(
         address _beneficiary,
-        uint256 _start,
-        uint256 _cliff,
-        uint256 _duration,
+        uint _start,
+        uint _cliff,
+        uint _duration,
         bool _revocable)
         public TokenVesting(
             _beneficiary,

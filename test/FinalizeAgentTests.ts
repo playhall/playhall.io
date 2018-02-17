@@ -47,8 +47,8 @@ contract('FinalizeAgent', (accounts) => {
     let START_TIME: number;
 
     before(async () => {
-        token = await PlayHallToken.New(deployingParams, {_admin: ADMIN});
-        await token.activate(W3.TC.txParamsDefaultDeploy(ADMIN))
+        token = await PlayHallToken.New(deployingParams);
+        await token.activate(W3.TC.txParamsDefaultDeploy(OWNER))
         pricingStrategy = await SalePricingStrategy.New(deployingParams, {
             _rates: RATES,
             _limits: LIMITS
@@ -82,7 +82,7 @@ contract('FinalizeAgent', (accounts) => {
             _reserveFund: RESERVE_FUND
         });
 
-        await token.transferOwnership(sale.address, Utils.txParams(OWNER, 0));
+        await token.setMinter(sale.address, Utils.txParams(OWNER));
     })
 
     it("#1 should have correct parameters", async () => {
