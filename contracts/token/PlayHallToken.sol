@@ -42,7 +42,7 @@ contract PlayHallToken is ERC223, Contactable {
         _;
     }
 
-    function PlayHallToken() {
+    function PlayHallToken() public {
         minter = msg.sender;
     }
 
