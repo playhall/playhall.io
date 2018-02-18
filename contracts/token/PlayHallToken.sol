@@ -120,7 +120,7 @@ contract PlayHallToken is ERC223, Contactable {
 
         if (isContract(_to)) {
             TokenReciever receiver = TokenReciever(_to);
-            receiver.tokenFallback(msg.sender, _value, _data);
+            receiver.tokenFallback(_from, _value, _data);
         }
 
         Transfer(_from, _to, _value);
